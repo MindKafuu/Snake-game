@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+        <title>Snake Game</title>
+        <style>
+            canvas {
+                border: 3px solid black;
+                background-color: #FFC125;
+                margin: auto;
+            }
+        </style>
+    </head>
+    <body>
+        <script>
+            //variable
+            var direction, snake, food, block = 10;
+
+            function init() {
+                direction = "right";
+
+                gameObject.start();
+                create_snake();
+                create_food();
+
+                //paint element of game
+                if(typeof game_loop != "undefined") clearInterval(game_loop);
+		        game_loop = setInterval(paint, 60);
+            }
+            
+            var gameObject = {
+                canvas: document.createElement("canvas"),
+                start: function () {
+                    this.canvas.width = 400;
+                    this.canvas.height = 400;
+                    this.context = this.canvas.getContext("2d");
+                    document.body.insertBefore(this.canvas, document.body.childNodes[0]);
+                    this.interval = setInterval(gameUpdate, 60);
+                    window.addEventListener("keydown", function (e) {
+                        gameObject.key = e.keyCode;
+                    })
+                    window.addEventListener("keyup", function (e) {
+                        gameObject.key = false;
+                    })
+                },
+                clear: function () {
+                    this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                },
+                paint_object: function (x, y, color) {
+                    this.context.fillStyle = color;
+                    this.context.fillRect(x * block, y * block, block, block);
+                    this.context.strokeStyle = "black";
+                    this.context.strokeRect(x * block, y * block, block, block);
+                }
+                
+            }
+
+            function gameUpdate() {
+                gameObject.clear();
+                if (gameObject.key && gameObject.key == 37 && direction != "right") direction = "left";
+                else if (gameObject.key && gameObject.key == 39 && direction != "left") direction = "right";
+                else if (gameObject.key && gameObject.key == 38 && direction != "down")  direction = "up";
+                else if (gameObject.key && gameObject.key == 40 && direction != "up") direction = "down";
+            }
+
+            init();
+
+            function create_snake() {
+                var length = 5;
+                snake = [];
+
+                //create a horizontal snake
+                for(var i = length - 1; i >= 0; i--) {
+                    snake.push({x:i, y:0});
+                }
+            }
+
+            function create_food() {
+                food = {
+                    x: Math.round(Math.random() * (400 - block) / block), 
+                    y: Math.round(Math.random() * (400 - block) / block), 
+                };
+            }
+
+            function paint() {
+                //how to movement of snake
+                var snake_x = snake[0].x;
+                var snake_y = snake[0].y;
+
+                //delete tail and add head
+                if(direction == "right") snake_x++;  
+                if(direction == "left") snake_x--;
+                if(direction == "up") snake_y--;
+                if(direction == "down") snake_y++;
+
+                if(snake_x == -1 || snake_x == 400/block || snake_y == -1 || snake_y == 400/block || check_collision(snake_x, snake_y, snake)) {
+                    //restart game
+                    init();
+                    return;
+                }
+
+                if(snake_x == food.x && snake_y == food.y) {
+                    var tail = {x: snake_x, y: snake_y};
+            
+                    //create new food
+                    create_food();
+                } else {
+                    var tail = snake.pop(); //pops out the last cell
+                    tail.x = snake_x; tail.y = snake_y;
+                }
+                
+                snake.unshift(tail); //puts back the tail as the first cell
+                
+                for(var i = 0; i < snake.length; i++) {
+                    var c = snake[i];
+                    //paint 10px wide cells
+                    gameObject.paint_object(c.x, c.y, "#009ACD");
+                }
+                
+                //paint the food
+                gameObject.paint_object(food.x, food.y, "#FF0000");
+            }
+
+            function check_collision(x, y, array)
+            {
+                for(var i = 0; i < array.length; i++)
+                {
+                    if(array[i].x == x && array[i].y == y)
+                    return true;
+                }
+                return false;
+            }
+        </script>
+    </body>
+</html>
